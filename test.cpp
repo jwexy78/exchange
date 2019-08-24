@@ -151,20 +151,24 @@ TEST_CASE("Exchange")
     {
         trader1.penOrder({Side::Buy, 10, 10});
         trader2.penOrder({Side::Sell, 10, 10});
-        exchange.tick(); // tick all Traders
+        exchange.tick(); // tick all Traders, pushing orders into the exchange queue
+        REQUIRE(trader1.getMoney() == TRADER_STARTING_CAPITAL);
+        REQUIRE(trader2.getMoney() == TRADER_STARTING_CAPITAL);
+        REQUIRE(trader1.getShares() == TRADER_STARTING_POSITION);
+        REQUIRE(trader2.getShares() == TRADER_STARTING_POSITION);
+        REQUIRE(trader1.getFreeMoney() == TRADER_STARTING_CAPITAL - 100);
+        REQUIRE(trader2.getFreeMoney() == TRADER_STARTING_CAPITAL);
+        REQUIRE(trader1.getFreeShares() == TRADER_STARTING_POSITION);
+        REQUIRE(trader2.getFreeShares() == TRADER_STARTING_POSITION - 10);
         exchange.tick(); // Perform first order
         exchange.tick(); // Perform second order
         REQUIRE(trader1.getMoney() == TRADER_STARTING_CAPITAL - 100);
         REQUIRE(trader2.getMoney() == TRADER_STARTING_CAPITAL + 100);
-        /*
-        TODO
-        REQUIRE(trader2.getOrderPosition() == -10);
-        REQUIRE(trader1.getMoneyPosition() == -100);
-        REQUIRE(trader2.getMoneyPosition() == 100);
-        REQUIRE(trader1.getSharesTraded() == 10);
-        REQUIRE(trader2.getSharesTraded() == 10);
-        REQUIRE(trader1.getMoneyTraded() == 100);
-        REQUIRE(trader2.getMoneyTraded() == 100);
-        */
+        REQUIRE(trader1.getShares() == TRADER_STARTING_POSITION + 10);
+        REQUIRE(trader2.getShares() == TRADER_STARTING_POSITION - 10);
+        REQUIRE(trader1.getFreeMoney() == trader1.getMoney());
+        REQUIRE(trader2.getFreeMoney() == trader2.getMoney());
+        REQUIRE(trader1.getFreeShares() == trader1.getShares());
+        REQUIRE(trader2.getFreeShares() == trader2.getShares());
     }
 }

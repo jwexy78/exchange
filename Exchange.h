@@ -44,9 +44,9 @@ void Exchange::tick()
     std::vector<Execution> execs = _book.addOrder(next.second);
     for (const auto& exec : execs) {
         _orderToTraderMap[exec.buyOrder.id]->notifyTraded(
-            Side::Buy, exec.quantity, exec.price);
+            exec.buyOrder, exec.quantity, exec.price);
         _orderToTraderMap[exec.sellOrder.id]->notifyTraded(
-            Side::Sell, exec.quantity, exec.price);
+            exec.sellOrder, exec.quantity, exec.price);
     }
 }
 

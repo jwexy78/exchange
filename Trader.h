@@ -3,6 +3,9 @@
 #include "Order.h"
 #include "Exchange.h"
 
+/// Superclass for all "Traders" who can trade
+/// on the exchange
+
 /// Minimum price an order can be placed at
 static constexpr price_t MARKET_MIN_PRICE = 1;
 /// Maximum price an order can be placed at
@@ -34,12 +37,23 @@ public:
     virtual void notifyOrderAccepted(Order ord);
     /// Notify the trader that an order they submitted has been
     /// (perhaps partially) filled
-    virtual void notifyTraded(Side side, quantity_t quantity, price_t price);
+    virtual void notifyTraded(const Order& origOrder, quantity_t quantity, price_t price);
 
-    int getMoney() const { return _money; }
-    int getShares() const { return _shares; }
+    /// Get how much total money the trader has
+    price_t getMoney() const { return _money; }
+    /// Get how many total shares the trader owns
+    quantity_t getShares() const { return _shares; }
+    /// Get how much free money the trader has. This is the 
+    /// total amount of money less the amount comitted to submitted
+    /// orders, and represents the amount that can be used for new trades.
+    price_t getFreeMoney() const { return _money - _moneyOutstanding; }
+    /// Same thing as `getFreeMoney` but for shares
+    quantity_t getFreeShares() const { return _shares - _sharesOutstanding; }
+
 
 protected:
+    /// Submit an order to the exchange.
+    /// Subclasses should always call this to trade
     void submitOrder(Order order);
 
 private:
@@ -58,7 +72,13 @@ private:
 
 void Trader::submitOrder(Order order)
 {
-    assert(_money >= _moneyOutstanding + order.price * order.quantity);
+    if (order.side == Side::Buy) {
+        assert(getFreeMoney() >= order.price * order.quantity);
+        _moneyOutstanding += order.price * order.quantity;
+    } else {
+        assert(getFreeShares() >= order.quantity);
+        _sharesOutstanding += order.quantity;
+    }
     _exchange.submitOrder(*this, order);
 }
 
@@ -66,8 +86,15 @@ void Trader::tick() {}
 
 void Trader::notifyOrderAccepted(Order ord){}
 
-void Trader::notifyTraded(Side side, quantity_t quantity, price_t price)
+void Trader::notifyTraded(const Order& origOrder, quantity_t quantity, price_t price)
 {
-    _money += (side == Side::Buy ? -1 * quantity * price : quantity * price);
-    _shares += (side == Side::Buy ? quantity : -1 * quantity);
+    if (origOrder.side == Side::Buy) {
+        _money -= quantity * price;
+        _shares += quantity;
+        _moneyOutstanding -= origOrder.price * quantity;
+    } else {
+        _money += quantity * price;
+        _shares -= quantity;
+        _sharesOutstanding -= quantity;
+    }
 }
