@@ -20,9 +20,14 @@ class RandomTrader : public Trader
     {
         if (rand() / (RAND_MAX + 1.0) < tradeChance) {
             Side side = (rand() % 2) == 0 ? Side::Buy : Side::Sell;
-            
             price_t price = (rand() % maxPrice) + 1;
             quantity_t quantity = (rand() % maxQuantity) + 1;
+            if (side == Side::Buy && price * quantity > getFreeMoney()) {
+                return;
+            }
+            if (side == Side::Sell && quantity > getFreeShares()) {
+                return;
+            }
             submitOrder({side, quantity, price});
         }
     }

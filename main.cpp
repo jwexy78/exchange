@@ -9,6 +9,8 @@
 #include "RandomMarketOrderTrader.h"
 #include "Curses.h"
 #include "RandomTrader.h"
+#include "DealerTrader.h"
+#include "SpreadTrader.h"
 
 bool stop = false;
 
@@ -24,42 +26,23 @@ int main()
     srand(time(NULL));
     Exchange exchange;
 
-    RandomTrader r1(exchange);
-    RandomTrader r2(exchange);
-    RandomTrader r3(exchange);
-    RandomTrader r4(exchange);
-    RandomTrader r5(exchange);
-    /*
-    RandomMarketOrderTrader rt1(exchange);
-    RandomMarketOrderTrader rt2(exchange);
-    RandomMarketOrderTrader rt3(exchange);
-    */
+    SpreadTrader s1(exchange);
+    DealerTrader d1(exchange);
+    DealerTrader d2(exchange, (MARKET_MAX_PRICE - MARKET_MIN_PRICE) / 2, 1);
+    constexpr int NUM_RANDOM_TRADERS = 1000;
+    RandomTrader* randomTraders[NUM_RANDOM_TRADERS];
+    for (int i = 0; i < NUM_RANDOM_TRADERS; ++i) {
+        randomTraders[i] = new RandomTrader(exchange);
+    }
 
     Curses curses;
 
     while (!stop) {
         exchange.tick();
-        curses.clear();
-        for (int i = MARKET_MAX_PRICE; i; --i ) {
-            int row = MARKET_MAX_PRICE + 1 - i;
-            curses.drawString(
-                "-" + std::to_string(i) + "-",
-                10, row);
-
-            quantity_t quantity =
-                    exchange.getBook()
-                            .getQuantityForLevel(i);
-            Side side = exchange.getBook()
-                                  .getSideForLevel(i);
-            int column = (side == Side::Buy ? 6 : 15);
-            curses.drawString(
-                std::to_string(quantity),
-                column, row);
-        }
-        curses.refresh();
+        exchange.draw(curses);
 
         std::this_thread::sleep_for(
-            std::chrono::milliseconds(100)
+            std::chrono::milliseconds(25)
         );
     }
     return 0;

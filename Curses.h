@@ -27,7 +27,7 @@ Curses::Curses()
     int h, w;
    getmaxyx(stdscr, h, w);
 
-    _window = newwin(w, h, 0, 0);
+    _window = newwin(h, w, 0, 0);
 }
 
 Curses::~Curses()

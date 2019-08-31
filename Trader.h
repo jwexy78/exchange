@@ -55,10 +55,9 @@ protected:
     /// Submit an order to the exchange.
     /// Subclasses should always call this to trade
     void submitOrder(Order order);
-
-private:
     Exchange& _exchange;
 
+private:
     // Total amount of money the trader has
     price_t _money;
     // Total number of shares the trader has

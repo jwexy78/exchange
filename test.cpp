@@ -171,4 +171,25 @@ TEST_CASE("Exchange")
         REQUIRE(trader1.getFreeShares() == trader1.getShares());
         REQUIRE(trader2.getFreeShares() == trader2.getShares());
     }
+
+    SECTION("Outstanding on Better Fill")
+    {
+        trader1.penOrder({Side::Buy, 10, 8});
+        trader2.penOrder({Side::Sell, 20, 2});
+        exchange.tick(); // tick all Traders, pushing orders into the exchange queue
+        REQUIRE(trader1.getFreeMoney() == TRADER_STARTING_CAPITAL - 8 * 10);
+        REQUIRE(trader2.getFreeMoney() == TRADER_STARTING_CAPITAL);
+        REQUIRE(trader1.getFreeShares() == TRADER_STARTING_POSITION);
+        REQUIRE(trader2.getFreeShares() == TRADER_STARTING_POSITION - 20);
+        exchange.tick(); // Perform first order
+        exchange.tick(); // Perform second order
+        REQUIRE(trader1.getMoney() == TRADER_STARTING_CAPITAL - 5 * 10);
+        REQUIRE(trader2.getMoney() == TRADER_STARTING_CAPITAL + 5 * 10);
+        REQUIRE(trader1.getShares() == TRADER_STARTING_POSITION + 10);
+        REQUIRE(trader2.getShares() == TRADER_STARTING_POSITION - 10);
+        REQUIRE(trader1.getFreeMoney() == trader1.getMoney());
+        REQUIRE(trader2.getFreeMoney() == trader2.getMoney());
+        REQUIRE(trader1.getFreeShares() == trader1.getShares());
+        REQUIRE(trader2.getFreeShares() == trader2.getShares() - 10);
+    }
 }
